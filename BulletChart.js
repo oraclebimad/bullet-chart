@@ -36,6 +36,7 @@
     {name: "baseline", caption: "Drop Baseline", fieldType: "measure", dataType: "number", formula: "summation"},
     {name: "current", caption: "Drop Current Value", fieldType: "measure", dataType: "number", formula: "summation"}
   ],
+  avoidRefresh: false,
   dataType: 'arrayOfArrays',
   render: function (context, container, data, fields, props) {
     container.innerHTML = '';
@@ -52,5 +53,12 @@
     this.visualization.render();
   },
   refresh: function (context, container, data, fields, props) {
+    if (!this.avoidRefresh) {
+      this.dataModel.setData(data).indexColumns();
+      this.visualization.animate(true);
+      this.visualization.setData(this.dataModel.nest().values).render();
+    }
+    this.avoidRefresh = false;
+
   }
 }
