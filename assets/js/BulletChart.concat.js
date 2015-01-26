@@ -402,22 +402,40 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     var opts = this.options;
     var thresholds = this.thresholds;
     this.data = data;
+    var maxCurrent = d3.max(Utils.pluck(data, 'current'));
+    var maxPast = d3.max(Utils.pluck(data, 'baseline'));
+    var totalWidth = this.options.chart.width;
+
+    scale.domain([0, Math.max(maxCurrent, maxPast, maxPast * (opts.target / 100))]);
+    console.log(scale.domain());
     //calculate the target, and thresholds values
     this.data.forEach(function (node) {
       //baseline
       //current
       var target = node.baseline * (opts.target / 100);
-      var bulletThreshold = thresholds.map(function (threshold) {
-        return removeExponential((threshold / 100) * target);
+      var bulletThreshold = [];
+      var widthSum = 0;
+      thresholds.forEach(function (threshold, index) {
+        var width = scale(removeExponential((threshold / 100) * target));
+        var x = bulletThreshold[index - 1] ? bulletThreshold[index - 1].width + bulletThreshold[index - 1].x : 0;
+        widthSum += width;
+        //if we dont have any other width, we need to adjust the threshold width to fit the full width
+        if (!thresholds[index + 1]) {
+          width = (totalWidth - widthSum) + width;
+        }
+        //construct the object with the rendering data
+        bulletThreshold.push({
+          width: width,
+          x: x,
+          originalWidth: scale(removeExponential((threshold / 100) * target))
+        });
       });
-      var max = Math.max(node.baseline, node.current, target, d3.max(bulletThreshold));
-      console.log(node.key, 'baseline', node.baseline, 'current', node.current, 'target', target, 'max', max);
-      scale.domain([0, max]);
       node.target = target;
       node.__target_x__ = removeExponential(scale(node.target));
       node.__width__ = removeExponential(scale(node.current));
       node.__thresholds__ = bulletThreshold;
     });
+    console.log(totalWidth, this.data);
     return this;
   };
 
@@ -478,12 +496,11 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     threshold.enter().append('rect').attr({
       'class': 'threshold',
       'height': opts.chart.height,
-      'width': function (d, index) {
-        var prev = index === 0 ? 0 : data.__thresholds__[index - 1];
-        return self.scale(d) - self.scale(prev);
+      'width': function (d) {
+        return d.width;
       },
-      'x': function (d, index) {
-        return self.scale(index === 0 ? 0 : data.__thresholds__[index - 1]);
+      'x': function (d) {
+        return d.x;
       }
     }).style({
       'fill': function (d, index) {
