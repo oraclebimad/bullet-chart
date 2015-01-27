@@ -5,13 +5,27 @@
   font-size: 14px;
 }
 
+.theme-black {
+  .bullet-charts-container {
+    .group.label {
+      fill:#fff;
+    }
+  }
+}
+
 .bullet-charts-container {
+
+  rect {
+    stroke: none;
+  }
 
   .label {
     fill: #A6A9A8;
     font-weight: 200;
     text-shadow: none;
+    text-anchor: start;
   }
+
 
   .label.group {
     fill: #000000;

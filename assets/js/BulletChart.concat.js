@@ -305,7 +305,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 ;(function (main) {
   /* jshint unused:true, jquery:true, curly:false, browser:true */
   /* global d3 */
-  /* global utils */
+  /* global Utils */
   'use strict';
 
   var LABEL_WIDTH = 0.29;
@@ -339,6 +339,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       this.setData(data);
     }
 
+
     this.format = Utils.format('thousands');
 
     //hide dom filters
@@ -363,7 +364,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       middle: 66,
       higher: 100
     },
-    target: 110,
+    target: 100,
     colors: {
       lowest: '#EC5D57',
       middle: '#F5D328',
@@ -419,37 +420,42 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
   };
 
   BulletChart.prototype.setData = function (data) {
+    this.data = data;
+
     var scale = this.scale;
     var opts = this.options;
-    this.data = data;
     var thresholds = d3.entries(opts.thresholds);
+    var thresholdsVal = d3.values(opts.thresholds);
     var maxCurrent = d3.max(Utils.pluck(data, 'current'));
     var maxPast = d3.max(Utils.pluck(data, 'baseline'));
-    var totalWidth = this.options.chart.width;
+    var maxDomain = Math.max(maxCurrent, maxPast, maxPast * (opts.thresholds.higher / 100)) * BUFFER;
+    console.log('maxCurrent', maxCurrent, 'maxPast', maxPast, 'maxDomain', maxDomain);
 
+    var sums = 0;
+    thresholds.forEach(function (threshold, index) {
+      sums = d3.sum(thresholdsVal.slice(0, index)) - sums;
+      threshold.step = (threshold.value - sums) / 100;
+    });
 
-    scale.domain([0, Math.max(maxCurrent, maxPast, maxPast * (opts.target / 100))]);
+    scale.domain([0, maxDomain]);
     //calculate the target, and thresholds values
     this.data.forEach(function (node) {
-      //baseline
-      //current
+      //calculate the target;
       var target = node.baseline * (opts.target / 100);
+      //get the full width corresponding to the target + BUFFER
+      var maxWidth = scale(target * BUFFER);
       var bulletThreshold = [];
-      var widthSum = 0;
+      //now calculate each threshold position and width
       thresholds.forEach(function (threshold, index) {
-        var width = scale(removeExponential((threshold.value / 100) * target));
-        var x = bulletThreshold[index - 1] ? bulletThreshold[index - 1].width + bulletThreshold[index - 1].x : 0;
-        widthSum += width;
-        //if we dont have any other width, we need to adjust the threshold width to fit the full width
-        if (!thresholds[index + 1]) {
-          width = (totalWidth - widthSum) + width;
-        }
+        var prevThreshold = bulletThreshold[index - 1] || {width: 0, x: 0};
+        var width = scale(target * (threshold.step));
+        var x = prevThreshold.width + prevThreshold.x;
         //construct the object with the rendering data
         bulletThreshold.push({
+          value: threshold.value,
           key: threshold.key,
           width: width,
-          x: x,
-          originalWidth: scale(removeExponential((threshold.value / 100) * target))
+          x: x
         });
       });
       node.target = target;
@@ -457,7 +463,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       node.__width__ = removeExponential(scale(node.current));
       node.__thresholds__ = bulletThreshold;
     });
-    console.log(totalWidth, this.data);
+    console.log(this.data, scale.domain(), scale.range());
     return this;
   };
 
@@ -520,12 +526,8 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     threshold.enter().append('rect').attr({
       'class': 'threshold',
       'height': opts.chart.height,
-      'width': function (d) {
-        return d.width;
-      },
-      'x': function (d) {
-        return d.x;
-      }
+      'width': 0,
+      'x': 0
     }).style({
       'fill': function (d) {
         return self.colors(d.key);
@@ -566,7 +568,6 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
         },
         'dy': '.1em'
       }).text(function (d) {
-        console.log(d);
         return isNaN(d.value) ? d.value : self.format(d.value);
       });
     });
@@ -575,6 +576,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     if (self.animations) {
       target = target.transition().delay(200).duration(700);
       current = current.transition().delay(200).duration(700);
+      threshold = threshold.transition().delay(200).duration(700);
     }
 
     current.attr('width', function (d) {
@@ -582,6 +584,14 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     });
     target.attr('x', function (d) {
       return d.value;
+    });
+    threshold.attr({
+      'width': function (d) {
+        return d.width;
+      },
+      'x': function (d) {
+        return d.x;
+      }
     });
   };
 
