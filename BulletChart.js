@@ -11,12 +11,17 @@
       {label: 'Raw', value: 'raw'},
       {label: 'Currency', value: 'currency'},
       {label: 'Thousands separated', value: 'thousands'}
-    ], value: 'currency'},
-    {key: "numberprefix", label: "Numeric Prefix (3.2k)", type: "boolean", value: true},
+    ], value: 'thousands'},
     {key: "currencysymbol", label: "Currency Symbol", type: "string", value: ""},
+    {key: "opacity", label: "Threshold opacity", type: "number", value: ".75"},
     {key: "lowest", label: "Lower Level %", type: "number", value: "33"},
     {key: "middle", label: "Middle Level %", type: "number", value: "66"},
-    {key: "higher", label: "Higher Level %", type: "number", value: "140"}
+    {key: "higher", label: "Higher Level %", type: "number", value: "140"},
+    {key: "lowestcolor", label: "Lower Color", type: "color", value: "#EC5D57"},
+    {key: "middlecolor", label: "Middle Color", type: "color", value: "#F5D328"},
+    {key: "highercolor", label: "Higher Color", type: "color", value: "#70BF41"},
+    {key: "currentcolor", label: "Current Bar Color", type: "color", value: "#53585F"},
+    {key: "targetcolor", label: "Target Color", type: "color", value: "#FFF"}
   ],
   remoteFiles: [
     {
@@ -61,7 +66,15 @@
         lowest: +props.lowest,
         middle: +props.middle,
         higher: +props.higher
-      }
+      },
+      colors: {
+        lowest: props.lowestcolor,
+        middle: props.middlecolor,
+        higher: props.highercolor,
+        current: props.currentcolor,
+        target: props.targetcolor
+      },
+      opacity: props.opacity
     });
     this.visualization.render();
   },

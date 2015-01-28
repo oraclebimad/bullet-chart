@@ -400,7 +400,11 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
     this.options.chart.inner.padding = (this.options.chart.height - this.options.chart.inner.height) / 2;
     this.options.chart.width = this.options.width * (1 - LABEL_WIDTH - 0.1);
-    this.svg = this.container.append('div').attr('class', 'chart-wrapper').append('svg');
+    this.svg = this.container.append('div').attr({
+      'class': 'chart-wrapper'
+    }).style({
+      'height': this.options.height + 'px'
+    }).append('svg');
 
     this.svg.attr({
       'class': 'bullet-charts-container',
@@ -550,6 +554,9 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     }).style({
       'fill': function (d) {
         return self.colors(d.key);
+      },
+      'opacity': function () {
+        return opts.opacity;
       }
     });
     current.enter().append('rect').attr({
