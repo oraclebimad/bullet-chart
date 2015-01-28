@@ -4,7 +4,7 @@
   /* global Utils */
   'use strict';
 
-  var LABEL_WIDTH = 0.29;
+  var LABEL_WIDTH = 0.39;
   var INNER_HEIGHT = 0.30;
   var BUFFER = 1.15;
 
@@ -101,7 +101,7 @@
     });
     this.group = this.svg.append('g').attr({
       'class': 'bullet-charts-group',
-      'transform': 'translate(' + this.options.margin.left + ', 0)'
+      'transform': 'translate(' + this.options.margin.left + ',' + this.options.chart.margin.top + ')'
     });
     this.bullets = this.group.selectAll('g.bullet-charts');
     this.axis = this.group.append('g');
@@ -163,18 +163,29 @@
     return this;
   };
 
+  BulletChart.prototype.getSVGHeight = function () {
+    var opts = this.options;
+    var svgHeight = ((opts.chart.margin.top + opts.chart.height) * this.data.length) + opts.axis.height + opts.chart.margin.top;
+    return svgHeight;
+  };
+
+  BulletChart.prototype.getAxisPosition = function () {
+    var x = this.options.label.width / 2;
+    var y = this.getSVGHeight() - this.options.axis.height - this.options.chart.margin.top;
+    return 'translate(' + x + ',' + y + ')';
+  };
+
   BulletChart.prototype.render = function () {
     var renderInner = Utils.proxy(this.renderInnerChart, this);
     var opts = this.options;
     var self = this;
     var axis = d3.svg.axis();
-    var svgHeight = ((opts.chart.margin.top + opts.chart.height) * this.data.length) + opts.axis.height + opts.chart.margin.top;
     axis.ticks(4).scale(this.scale).tickFormat(d3.format('s'));
 
-    this.svg.attr('height', svgHeight);
+    this.svg.attr('height', this.getSVGHeight());
     this.axis.attr({
       'class': 'axis',
-      'transform': 'translate(' + (opts.label.width / 2) + ',' + (svgHeight - opts.axis.height) + ')'
+      'transform': this.getAxisPosition()
     }).call(axis);
     this.bullets = this.bullets.data(this.data, BulletChart.key);
     this.bullets.enter().append('g').attr({
@@ -190,8 +201,6 @@
     this.bullets.each(function (data) {
       renderInner(d3.select(this), data);
     });
-
-
   };
 
   BulletChart.prototype.renderInnerChart = function (bullet, data) {
@@ -253,17 +262,15 @@
       'transform': function (d, index) {
         var w = opts.label.width / 2;
         var x = (w + opts.chart.width) * index;
-        return 'translate(' + x + ', ' + (opts.chart.margin.top * 2) + ')';
+        return 'translate(' + x + ', 0)';
        }
-    }).append('text');
+    }).each(function (data) {
+      self.createForeignObject(d3.select(this), data);
+    });
 
     labelsContainer.each(function () {
-      d3.select(this).select('text').attr({
-        'class': function (d) {
-          return 'label ' + d.key;
-        },
-        'dy': '.1em'
-      }).text(function (d) {
+      var label = d3.select(this).select('span.croptext');
+      label.text(function (d) {
         return isNaN(d.value) ? d.value : self.format(d.value);
       });
     });
@@ -289,6 +296,18 @@
         return d.x;
       }
     });
+  };
+
+  BulletChart.prototype.createForeignObject = function (container, data) {
+    var foreign = container.append('foreignObject').attr({
+      'class': 'label-wrapper',
+      'width': this.options.label.width / 2,
+      'height': this.options.chart.height
+    });
+
+    foreign.append('xhtml:div').attr({
+      'class': 'label ' + data.key
+    }).append('xhtml:span').attr('class', 'croptext');
   };
 
   BulletChart.prototype.animate = function (animate) {

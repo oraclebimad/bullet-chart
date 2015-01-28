@@ -33,8 +33,8 @@
   ],
   fields: [
     {name: "group", caption: "Drop Group", fieldType: "label", dataType: "string"},
-    {name: "baseline", caption: "Drop Baseline", fieldType: "measure", dataType: "number", formula: "summation"},
-    {name: "current", caption: "Drop Current Value", fieldType: "measure", dataType: "number", formula: "summation"}
+    {name: "current", caption: "Drop Current Value", fieldType: "measure", dataType: "number", formula: "summation"},
+    {name: "baseline", caption: "Drop Baseline", fieldType: "measure", dataType: "number", formula: "summation"}
   ],
   avoidRefresh: false,
   dataType: 'arrayOfArrays',
