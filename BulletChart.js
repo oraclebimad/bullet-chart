@@ -7,13 +7,13 @@
   properties: [
     {key: "width", label: "Width", type: "length", value: "320px"},
     {key: "height", label: "Height", type: "length", value: "300px"},
-    //{key: "numberformat", label: "Numeric Format", type: "lov", options: [
-      //{label: 'Raw', value: 'raw'},
-      //{label: 'Currency', value: 'currency'},
-      //{label: 'Thousands separated', value: 'thousands'}
-    //]},
-    //{key: "currencysymbol", label: "Currency Symbol", type: "string", value: ""},
-    //{key: "target", label: "Target %", type: "number", value: "110"},
+    {key: "numberformat", label: "Numeric Format", type: "lov", options: [
+      {label: 'Raw', value: 'raw'},
+      {label: 'Currency', value: 'currency'},
+      {label: 'Thousands separated', value: 'thousands'}
+    ], value: 'currency'},
+    {key: "numberprefix", label: "Numeric Prefix (3.2k)", type: "boolean", value: true},
+    {key: "currencysymbol", label: "Currency Symbol", type: "string", value: ""},
     {key: "lowest", label: "Lower Level %", type: "number", value: "33"},
     {key: "middle", label: "Middle Level %", type: "number", value: "66"},
     {key: "higher", label: "Higher Level %", type: "number", value: "140"}
@@ -46,9 +46,17 @@
      'group'
      ]).sortBy('baseline').desc().indexColumns();
 
+    props.numberprefix = typeof props.numberprefix !== 'boolean' ? props.numberprefix === 'true' : props.numberprefix;
     this.visualization = new Visualizations.BulletChart(container, this.dataModel.nest().values, {
       width: parseInt(props.width, 10),
       height: parseInt(props.height, 10),
+      numberFormat: Utils.format(props.numberformat, {
+        symbol: props.currencysymbol
+      }),
+      axisFormat: Utils.format(props.numberformat, {
+        symbol: props.currencysymbol,
+        si: true
+      }),
       thresholds: {
         lowest: +props.lowest,
         middle: +props.middle,

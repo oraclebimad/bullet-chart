@@ -27,6 +27,8 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       opts = Utils.isObject(opts) ? opts : {};
       if (opts.decimals)
         format += '.2';
+      if (opts.si)
+        format = 's';
       format += 'f';
       return d3.format(format);
     }
@@ -339,9 +341,6 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       this.setData(data);
     }
 
-
-    this.format = Utils.format('thousands');
-
     //hide dom filters
     var filter = container.parentNode.querySelector('.filterinfo');
     if (filter)
@@ -374,6 +373,11 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     }
   };
 
+  /**
+   * Helper method to create a key for d3's selections
+   * @param Object
+   * @returns String key for selection
+   */
   BulletChart.key = function (data) {
     return data.key;
   };
@@ -414,6 +418,12 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     return this;
   };
 
+  /**
+   * Sets the colors to create the color scale
+   * @param Object must contain the following keys: target, current, lowest, middle, higher
+   * @returns Object
+   *
+   */
   BulletChart.prototype.setColors = function (colors) {
     this.colors = d3.scale.ordinal().domain(d3.keys(colors)).range(d3.values(colors));
     return this;
@@ -484,7 +494,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     var opts = this.options;
     var self = this;
     var axis = d3.svg.axis();
-    axis.ticks(4).scale(this.scale).tickFormat(d3.format('s'));
+    axis.ticks(4).scale(this.scale).tickFormat(opts.axisFormat);
 
     this.svg.attr('height', this.getSVGHeight());
     this.axis.attr({
@@ -575,7 +585,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     labelsContainer.each(function () {
       var label = d3.select(this).select('span.croptext');
       label.text(function (d) {
-        return isNaN(d.value) ? d.value : self.format(d.value);
+        return isNaN(d.value) ? d.value : opts.numberFormat(d.value);
       });
     });
 
