@@ -323,7 +323,6 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
    * @param HTMLNode container
    * @param Array data
    * @param Object opts Optional
-   *
    */
 
   var BulletChart = function (container, data, opts) {
@@ -336,6 +335,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       'filter': [],
       'remove-filter': []
     };
+    this.filters = {};
 
     if (Utils.isArray(data)) {
       this.setData(data);
@@ -352,6 +352,8 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     width: 400,
     height: 300,
     margin: {left: 10},
+    targetLabel: '',
+    currentLabel: '',
     chart: {
       height: 30,
       margin: {top: 10}
@@ -388,6 +390,8 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
    *
    */
   BulletChart.prototype.init = function () {
+    var svg;
+    var self = this;
     this.options.label.width = this.options.width * LABEL_WIDTH;
     this.options.chart.inner = {
       height: this.options.chart.height  * INNER_HEIGHT
@@ -406,6 +410,8 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       'height': this.options.height + 'px'
     }).append('svg');
 
+    svg = this.svg.node();
+
     this.svg.attr({
       'class': 'bullet-charts-container',
       'width': this.options.width,
@@ -416,9 +422,23 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       'transform': 'translate(' + this.options.margin.left + ',' + this.options.chart.margin.top + ')'
     });
     this.bullets = this.group.selectAll('g.bullet-charts');
-    this.axis = this.group.append('g');
+    this.axis = this.group.append('g').attr('class', 'axis');
+    this.marker = this.group.append('g').attr('class', 'marker');
     this.scale = d3.scale.linear().range([0, this.options.chart.width]);
     this.setColors(this.options.colors);
+    this.renderPopup();
+
+
+    jQuery(svg).on('tap.bullet-chart', 'g.bullet-chart', function (event) {
+      var bullet = d3.select(this);
+      self.toggleSelect(bullet, event);
+    });
+    document.body.addEventListener('click', function (event) {
+      var target = $(event.target || event.srcElement);
+      if (!target.is('g.bullet-chart') && !target.parents('g.bullet-chart').length && !target.is('.ui-popup-container') && !target.parents('.ui-popup-container').length)
+        self.popup.popup('close');
+    });
+
     return this;
   };
 
@@ -443,7 +463,6 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     var maxCurrent = d3.max(Utils.pluck(data, 'current'));
     var maxPast = d3.max(Utils.pluck(data, 'baseline'));
     var maxDomain = Math.max(maxCurrent, maxPast, maxPast * (opts.thresholds.higher / 100)) * BUFFER;
-    console.log('maxCurrent', maxCurrent, 'maxPast', maxPast, 'maxDomain', maxDomain);
 
     var sums = 0;
     thresholds.forEach(function (threshold, index) {
@@ -453,7 +472,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
     scale.domain([0, maxDomain]);
     //calculate the target, and thresholds values
-    this.data.forEach(function (node) {
+    this.data.forEach(function (node, index) {
       //calculate the target;
       var target = node.baseline * (opts.target / 100);
       //get the full width corresponding to the target + BUFFER
@@ -476,6 +495,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       node.__target_x__ = removeExponential(scale(node.target));
       node.__width__ = removeExponential(scale(node.current));
       node.__thresholds__ = bulletThreshold;
+      node.__y__ = ((opts.chart.height  + opts.chart.margin.top) * index);
     });
     console.log(this.data, scale.domain(), scale.range());
     return this;
@@ -488,9 +508,13 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
   };
 
   BulletChart.prototype.getAxisPosition = function () {
-    var x = this.options.label.width / 2;
+    var x = this.options.label.width;
     var y = this.getSVGHeight() - this.options.axis.height - this.options.chart.margin.top;
     return 'translate(' + x + ',' + y + ')';
+  };
+
+  BulletChart.prototype.getMarkerPosition = function () {
+    return 'translate(' + (this.options.label.width) + ', 0)';
   };
 
   BulletChart.prototype.render = function () {
@@ -502,11 +526,13 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
     this.svg.attr('height', this.getSVGHeight());
     this.axis.attr({
-      'class': 'axis',
       'transform': this.getAxisPosition()
     }).call(axis);
+    this.marker.attr({
+      'transform': this.getMarkerPosition()
+    });
     this.bullets = this.bullets.data(this.data, BulletChart.key);
-    this.bullets.enter().append('g').attr({
+    this.bullets.enter().insert('g', 'g.marker').attr({
       'class': 'bullet-chart'
     });
 
@@ -523,8 +549,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
   BulletChart.prototype.renderInnerChart = function (bullet, data) {
     var labelsContainer = bullet.selectAll('g.label-container').data([
-      {key: 'group', value: data.key},
-      {key: 'current', value: data.current}
+      {key: 'group', value: data.key}
     ], BulletChart.key);
     var graphic = bullet.select('g.graphic');
     var opts = this.options;
@@ -532,7 +557,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     if (!graphic.size()) {
       graphic = bullet.append('g').attr({
         'class': 'graphic',
-        'transform': 'translate(' + (opts.label.width / 2) + ', 0)'
+        'transform': 'translate(' + opts.label.width + ', 0)'
       });
     }
     var threshold = graphic.selectAll('rect.threshold').data(data.__thresholds__);
@@ -581,7 +606,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     labelsContainer.enter().insert('g', 'g.graphic').attr({
       'class': 'label-container',
       'transform': function (d, index) {
-        var w = opts.label.width / 2;
+        var w = opts.label.width;
         var x = (w + opts.chart.width) * index;
         return 'translate(' + x + ', 0)';
        }
@@ -619,10 +644,40 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     });
   };
 
+  BulletChart.prototype.renderPopup = function () {
+    this.popup = jQuery(this.container.select('div.chart-wrapper').append('div').node());
+    this.popup.attr({
+      'class': 'ui-content popup-detail',
+      'data-arrow': 'b,l',
+      'data-role': 'popup',
+      'data-theme': 'a',
+      'data-history': false
+    });
+
+    var popupContent = ['<ul class="details">'];
+    popupContent.push('<li>');
+    popupContent.push('<span class="target label">Target ' + Utils.capitalize(this.options.targetLabel) + ':</span>');
+    popupContent.push('<span class="target value"></span>');
+    popupContent.push('</li>');
+    popupContent.push('<li>');
+    popupContent.push('<span class="current label">Current ' + Utils.capitalize(this.options.currentLabel) + ':</span>');
+    popupContent.push('<span class="current value"></span>');
+    popupContent.push('</li>');
+    popupContent.push('<li>');
+    popupContent.push('<span class="percentage value"></span>');
+    popupContent.push('<span class="percentage label">of the Target ' + Utils.capitalize(this.options.targetLabel) + '</span>');
+    popupContent.push('</li>');
+    popupContent.push('</ul>');
+
+    this.popup.html(popupContent.join(''));
+    this.popup.popup();
+    return this;
+  };
+
   BulletChart.prototype.createForeignObject = function (container, data) {
     var foreign = container.append('foreignObject').attr({
       'class': 'label-wrapper',
-      'width': this.options.label.width / 2,
+      'width': this.options.label.width,
       'height': this.options.chart.height
     });
 
@@ -637,6 +692,142 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     this.animations = animate;
     return this;
   };
+
+  BulletChart.prototype.showPopup = function (data, position) {
+    this.popup.popup('close');
+    this.popup.find('.target.value').html(this.options.numberFormat(data.baseline));
+    this.popup.find('.current.value').html(this.options.numberFormat(data.current));
+    this.popup.find('.percentage.value').html(parseInt((data.current * 100) / data.baseline, 10) + '%');
+    this.popup.popup('open', position);
+    return this;
+  };
+
+  BulletChart.prototype.hidePopup = function () {
+    this.popup.popup('close');
+    return this;
+  };
+
+  BulletChart.prototype.toggleSelect = function (bullet, event) {
+    var isSelected = bullet.classed('selected');
+    var data = bullet.data()[0];
+    bullet.classed('selected', !isSelected);
+    this.svg.classed('has-selected', !isSelected);
+    if (!isSelected) {
+      this.addFilter(data).showMarkers(data).showPopup(data, {
+        x: event.pageX,
+        y: event.pageY
+      });
+    } else {
+      this.removeFilter(data).removeMarkers().hidePopup();
+    }
+
+    return this;
+  };
+
+  BulletChart.prototype.showMarkers = function (data) {
+    this.removeMarkers();
+    this.marker.append('line').attr({
+      'x1': data.__target_x__ + 2,
+      'x2': data.__target_x__ + 2,
+      'y1': data.__y__,
+      'y2': this.getSVGHeight() - this.options.axis.height - this.options.chart.margin.top,
+      'stroke-dasharray': '5, 5'
+    });
+    //create path
+    return this;
+  };
+
+  BulletChart.prototype.removeMarkers = function () {
+    //remove path
+    this.marker.select('line').remove();
+    return this;
+  };
+
+  BulletChart.prototype.addFilter = function (data) {
+    var uid = this.generateUID(data.key);
+    if (!(uid in this.filters))
+      this.filters[uid] = {name: data.key};
+
+    this.trigger('filter', [this.filters]);
+    return this;
+  };
+
+  BulletChart.prototype.updateFilterInfo = function (filters) {
+    if (!Utils.isArray(filters))
+      return this;
+
+    var self = this;
+    filters.forEach(function(filter) {
+      var key = self.generateUID(filter.value);
+      if (key in self.filters && filter.id)
+        self.filters[key].id = filter.id;
+    });
+  };
+
+  BulletChart.prototype.generateUID = function (str) {
+    str = (str || '').replace(/[^a-z0-9]/i, '');
+    return str + str.length;
+  };
+
+  BulletChart.prototype.removeFilter = function (data) {
+    var uid = this.generateUID(data.key);
+    var filters;
+    var index;
+    if (!(uid in this.filters)) {
+      return this;
+    }
+    filters = [this.filters[uid]];
+    delete this.filters[uid];
+
+    this.trigger('remove-filter', [filters]);
+    return this;
+  };
+
+  BulletChart.prototype.clearFilters = function () {
+    var filters = [];
+    var key;
+    for (key in this.filters) {
+      filters.push(this.filters[key]);
+    }
+    this.filters = {};
+    this.trigger('remove-filter', [filters]);
+    return this;
+  };
+
+  /**
+   * Adds an event listener
+   * @param String type event name
+   * @param Function callback to execute
+   * @return BulletChart
+   *
+   */
+  BulletChart.prototype.addEventListener = function (type, callback) {
+    if (!(type in this.events)) {
+      this.events[type] = [];
+    }
+    this.events[type].push(callback);
+    return this;
+  };
+
+  /**
+   * Triggers an event calling all of the callbacks attached to it.
+   * @param String type event name
+   * @param Array args to pass to the callback
+   * @param Object thisArg to execute the callback in a certain context
+   * @return BulletChart
+   *
+   */
+  BulletChart.prototype.trigger = function (type, args, thisArg) {
+    if ((type in this.events) && this.events[type].length) {
+      args = jQuery.isArray(args) ? args : [];
+      thisArg = thisArg || this;
+      this.events[type].forEach(function (callback) {
+        callback.apply(thisArg, args);
+      });
+    }
+    return this;
+  };
+
 
   if (!('Visualizations' in main))
     main.Visualizations = {};

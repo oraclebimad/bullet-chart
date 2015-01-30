@@ -44,6 +44,7 @@
   avoidRefresh: false,
   dataType: 'arrayOfArrays',
   render: function (context, container, data, fields, props) {
+    var self = this;
     container.innerHTML = '';
 
     this.dataModel = new Utils.DataModel(data, fields);
@@ -74,9 +75,26 @@
         current: props.currentcolor,
         target: props.targetcolor
       },
-      opacity: props.opacity
+      opacity: props.opacity,
+      currentLabel: this.dataModel.indexedMetaData.current.label,
+      targetLabel: this.dataModel.indexedMetaData.baseline.label
     });
     this.visualization.render();
+    this.visualization.addEventListener('filter', function (filters) {
+      filters = self.constructFilters(filters, context);
+      xdo.api.handleClickEvent(filters);
+      this.updateFilterInfo(filters.filter);
+      console.log(filters);
+    }).addEventListener('remove-filter', function (filters) {
+      self.avoidRefresh = true;
+      filters.forEach(function (filter) {
+        try{
+             xdo.app.viewer.GlobalFilter.removeFilter(context.id, filter.id);
+        } catch (e) {}
+      });
+    });
+
+
   },
   refresh: function (context, container, data, fields, props) {
     if (!this.avoidRefresh) {
@@ -86,5 +104,18 @@
     }
     this.avoidRefresh = false;
 
+  },
+  constructFilters: function (data, context) {
+    var group = this.dataModel.indexedMetaData.group.field;
+    var filters = [];
+    var children;
+    for (var key in data) {
+      filters.push({field: group, value: data[key].name});
+    }
+
+    return {
+      id: context.id,
+      filter: filters
+    };
   }
 }

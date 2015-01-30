@@ -1,9 +1,57 @@
+.ui-popup-screen.ui-overlay-inherit {
+    display:none;
+}
+
 .chart-wrapper {
   font-family: "Helvetica Neue", Helvetica, SansSerif;
   position: relative;
   overflow: auto;
   font-size: 14px;
 }
+
+
+/**
+ *
+ * Details popup
+ */
+
+.details {
+    list-style: none;
+    padding: 0;
+    margin: 5px 0 0 0;
+
+    .label, .value {
+      font-size: .9em;
+      line-height: 1.8em;
+      margin-right: 5px;
+      text-transform: capitalize;
+      color: #fff;
+    }
+
+    .label {
+      font-weight: 500;
+    }
+}
+
+
+.ui-popup.ui-body-a {
+ &, .ui-popup-arrow {
+    background-color: #535353;
+    opacity: 0.85;
+  }
+}
+
+
+.popup-detail {
+    font-weight: 200;
+    text-shadow: none;
+    color: #fff;
+}
+
+/**
+ *
+ * Details popup
+ */
 
 .croptext {
     text-overflow: ellipsis;
@@ -21,7 +69,13 @@
   }
 }
 
+
 .bullet-charts-container {
+
+  .marker line {
+    stroke: #A6A9A8;
+    stroke-width: 1px;
+  }
 
   rect {
     stroke: none;
@@ -74,4 +128,12 @@
       .label.current;
     }
   }
+}
+
+.has-selected .bullet-chart {
+  opacity: .25 !important; /*:( used in order to override from style property*/
+}
+
+.has-selected .bullet-chart.selected {
+  opacity: 1 !important; /*:( used in order to override from style property*/
 }
