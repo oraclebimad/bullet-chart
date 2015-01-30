@@ -350,11 +350,11 @@
 
     var popupContent = ['<ul class="details">'];
     popupContent.push('<li>');
-    popupContent.push('<span class="target label">Target ' + Utils.capitalize(this.options.targetLabel) + ':</span>');
+    popupContent.push('<span class="target label">' + Utils.capitalize(this.options.targetLabel) + ':</span>');
     popupContent.push('<span class="target value"></span>');
     popupContent.push('</li>');
     popupContent.push('<li>');
-    popupContent.push('<span class="current label">Current ' + Utils.capitalize(this.options.currentLabel) + ':</span>');
+    popupContent.push('<span class="current label">' + Utils.capitalize(this.options.currentLabel) + ':</span>');
     popupContent.push('<span class="current value"></span>');
     popupContent.push('</li>');
     popupContent.push('<li>');
