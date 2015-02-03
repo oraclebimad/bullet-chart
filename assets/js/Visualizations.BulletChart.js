@@ -43,9 +43,9 @@
 
   BulletChart.DEFAULTS = {
     axis: {
-      height: 20,
-      position: 'top'
+      height: 20
     },
+    axisPosition: 'top',
     width: 400,
     height: 300,
     margin: {left: 10},
@@ -109,7 +109,7 @@
       'height': (this.options.height - this.options.axis.height) + 'px'
     }).append('svg');
 
-    if (this.options.axis.position === 'top')
+    if (this.options.axisPosition === 'top')
       axisWrapper = this.container.insert('svg', 'div.chart-wrapper');
     else
       axisWrapper = this.container.append('svg');
@@ -222,7 +222,7 @@
 
   BulletChart.prototype.getAxisPosition = function () {
     var x = this.options.label.width + this.options.margin.left;
-    var y = this.options.axis.position === 'top' ? this.options.axis.height : 1;
+    var y = this.options.axisPosition === 'top' ? this.options.axis.height : 1;
     return 'translate(' + x + ',' + y + ')';
   };
 
@@ -235,7 +235,7 @@
     var opts = this.options;
     var self = this;
     var axis = d3.svg.axis();
-    axis.orient(opts.axis.position);
+    axis.orient(opts.axisPosition);
     axis.ticks(4).scale(this.scale).tickFormat(opts.axisFormat);
 
     this.svg.attr('height', this.getSVGHeight());
@@ -440,7 +440,7 @@
     var isSelected = bullet.classed('selected');
     var data = bullet.data()[0];
     bullet.classed('selected', !isSelected);
-    this.svg.classed('has-selected', !isSelected);
+    this.svg.classed('has-selected', this.group.selectAll('g.bullet-chart.selected').size() > 0);
     if (!isSelected) {
       this.showMarkers(data).addFilter(data);
     } else {
@@ -455,7 +455,7 @@
     var y1 = data.__y__;
     var y2 = this.getSVGHeight() + this.options.chart.margin.top;
 
-    if (this.options.axis.position === 'top') {
+    if (this.options.axisPosition === 'top') {
       y1 = this.options.chart.margin.top * -1;
       y2 = data.__y__ + this.options.chart.height;
     }
