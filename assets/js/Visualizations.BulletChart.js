@@ -5,6 +5,7 @@
   'use strict';
 
   var LABEL_WIDTH = 0.39;
+  var MAX_LABEL_WIDTH = 150;
   var INNER_HEIGHT = 0.30;
   var BUFFER = 1.15;
 
@@ -81,28 +82,26 @@
     return data.key;
   };
 
-
-  /**
-   * Initializes the Bullet chart plugin
-   *
-   */
-  BulletChart.prototype.init = function () {
-    var svg;
-    var self = this;
-    var axisWrapper;
-    this.options.label.width = this.options.width * LABEL_WIDTH;
-    this.options.chart.inner = {
-      height: this.options.chart.height  * INNER_HEIGHT
+  BulletChart.prototype.calculateLayout = function () {
+    var opts = this.options;
+    opts.label.width = opts.width * LABEL_WIDTH;
+    opts.label.width = opts.label.width > MAX_LABEL_WIDTH ? MAX_LABEL_WIDTH : opts.label.width;
+    opts.chart.inner = {
+      height: opts.chart.height  * INNER_HEIGHT
     };
 
-    this.options.chart.target = {
-      height: this.options.chart.inner.height * 2,
+    opts.chart.target = {
+      height: opts.chart.inner.height * 2,
       width: 3
     };
 
-    this.options.chart.inner.padding = (this.options.chart.height - this.options.chart.inner.height) / 2;
-    this.options.chart.width = this.options.width * (1 - LABEL_WIDTH - 0.1);
+    opts.chart.inner.padding = (opts.chart.height - opts.chart.inner.height) / 2;
+    opts.chart.width = opts.width * (1 - LABEL_WIDTH - 0.1);
+    return this;
+  };
 
+  BulletChart.prototype.createDOM = function () {
+    var axisWrapper;
     this.svg = this.container.append('div').attr({
       'class': 'chart-wrapper'
     }).style({
@@ -120,7 +119,6 @@
       'width': this.options.width
     });
 
-    svg = this.svg.node();
 
     this.svg.attr({
       'class': 'bullet-charts-container',
@@ -135,6 +133,19 @@
     this.bullets = this.group.selectAll('g.bullet-charts');
     this.axis = axisWrapper.append('g').attr('class', 'axis');
     this.marker = this.group.append('g').attr('class', 'marker');
+    return this;
+  };
+
+
+  /**
+   * Initializes the Bullet chart plugin
+   *
+   */
+  BulletChart.prototype.init = function () {
+    this.calculateLayout().createDOM();
+    var svg = this.svg.node();
+    var self = this;
+
     this.scale = d3.scale.linear().range([0, this.options.chart.width]);
     this.setColors(this.options.colors);
     this.renderPopup();
