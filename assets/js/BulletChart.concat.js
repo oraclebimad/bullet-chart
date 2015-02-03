@@ -348,7 +348,10 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
   };
 
   BulletChart.DEFAULTS = {
-    axis: {height: 20},
+    axis: {
+      height: 20,
+      position: 'top'
+    },
     width: 400,
     height: 300,
     margin: {left: 10},
@@ -392,6 +395,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
   BulletChart.prototype.init = function () {
     var svg;
     var self = this;
+    var axisWrapper;
     this.options.label.width = this.options.width * LABEL_WIDTH;
     this.options.chart.inner = {
       height: this.options.chart.height  * INNER_HEIGHT
@@ -404,11 +408,23 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
     this.options.chart.inner.padding = (this.options.chart.height - this.options.chart.inner.height) / 2;
     this.options.chart.width = this.options.width * (1 - LABEL_WIDTH - 0.1);
+
     this.svg = this.container.append('div').attr({
       'class': 'chart-wrapper'
     }).style({
-      'height': this.options.height + 'px'
+      'height': (this.options.height - this.options.axis.height) + 'px'
     }).append('svg');
+
+    if (this.options.axis.position === 'top')
+      axisWrapper = this.container.insert('svg', 'div.chart-wrapper');
+    else
+      axisWrapper = this.container.append('svg');
+
+    axisWrapper.attr({
+      'class': 'axis-wrapper',
+      'height': this.options.axis.height,
+      'width': this.options.width
+    });
 
     svg = this.svg.node();
 
@@ -422,7 +438,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       'transform': 'translate(' + this.options.margin.left + ',' + this.options.chart.margin.top + ')'
     });
     this.bullets = this.group.selectAll('g.bullet-charts');
-    this.axis = this.group.append('g').attr('class', 'axis');
+    this.axis = axisWrapper.append('g').attr('class', 'axis');
     this.marker = this.group.append('g').attr('class', 'marker');
     this.scale = d3.scale.linear().range([0, this.options.chart.width]);
     this.setColors(this.options.colors);
@@ -505,14 +521,13 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
   BulletChart.prototype.getSVGHeight = function () {
     var opts = this.options;
-    var svgHeight = ((opts.chart.margin.top + opts.chart.height) * this.data.length) + opts.axis.height + opts.chart.margin.top;
+    var svgHeight = ((opts.chart.margin.top + opts.chart.height) * this.data.length);
     return svgHeight;
   };
 
   BulletChart.prototype.getAxisPosition = function () {
-    var x = this.options.label.width;
-    var y = this.getSVGHeight() - this.options.axis.height - this.options.chart.margin.top;
-    return 'translate(' + x + ',' + y + ')';
+    var x = this.options.label.width + this.options.margin.left;
+    return 'translate(' + x + ', 1)';
   };
 
   BulletChart.prototype.getMarkerPosition = function () {
@@ -740,11 +755,19 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
   BulletChart.prototype.showMarkers = function (data) {
     this.removeMarkers();
+    var y1 = data.__y__;
+    var y2 = this.getSVGHeight() + this.options.chart.margin.top;
+
+    if (this.options.axis.position === 'top') {
+      y1 = this.options.chart.margin.top * -1;
+      y2 = data.__y__ + this.options.chart.height;
+    }
+
     this.marker.append('line').attr({
       'x1': data.__target_x__ + 2,
       'x2': data.__target_x__ + 2,
-      'y1': data.__y__,
-      'y2': this.getSVGHeight() - this.options.axis.height - this.options.chart.margin.top,
+      'y1': y1,
+      'y2': y2,
       'stroke-dasharray': '5, 5'
     });
     //create path
