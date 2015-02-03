@@ -123,10 +123,12 @@
     this.renderPopup();
 
 
-    jQuery(svg).on('tap.bullet-chart', 'g.bullet-chart', function (event) {
-      var bullet = d3.select(this);
-      self.toggleSelect(bullet, event);
+    jQuery(svg).on('tap.bullet-chart', '.graphic', function (event) {
+      self.togglePopup(d3.select(this.parentNode), event);
+    }).on('tap.bullet-chart', '.label-container', function () {
+      self.toggleSelect(d3.select(this.parentNode));
     });
+
     document.body.addEventListener('click', function (event) {
       var target = $(event.target || event.srcElement);
       if (!target.is('g.bullet-chart') && !target.parents('g.bullet-chart').length && !target.is('.ui-popup-container') && !target.parents('.ui-popup-container').length)
@@ -401,18 +403,30 @@
     return this;
   };
 
-  BulletChart.prototype.toggleSelect = function (bullet, event) {
+  BulletChart.prototype.togglePopup = function (bullet, event) {
+    var hasPopup = bullet.classed('has-popup');
+    var data = bullet.data()[0];
+    this.group.selectAll('g.bullet-chart.has-popup').classed('has-popup', false);
+    bullet.classed('has-popup', !hasPopup);
+
+    this.hidePopup();
+    if (!hasPopup) {
+      this.showPopup(data, {
+        x: event.pageX,
+        y: event.pageY
+      });
+    }
+  };
+
+  BulletChart.prototype.toggleSelect = function (bullet) {
     var isSelected = bullet.classed('selected');
     var data = bullet.data()[0];
     bullet.classed('selected', !isSelected);
     this.svg.classed('has-selected', !isSelected);
     if (!isSelected) {
-      this.addFilter(data).showMarkers(data).showPopup(data, {
-        x: event.pageX,
-        y: event.pageY
-      });
+      this.showMarkers(data).addFilter(data);
     } else {
-      this.removeFilter(data).removeMarkers().hidePopup();
+      this.removeMarkers().removeFilter(data);
     }
 
     return this;
