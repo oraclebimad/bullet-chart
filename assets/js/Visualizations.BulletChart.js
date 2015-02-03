@@ -96,7 +96,7 @@
     };
 
     opts.chart.inner.padding = (opts.chart.height - opts.chart.inner.height) / 2;
-    opts.chart.width = opts.width * (1 - LABEL_WIDTH - 0.1);
+    opts.chart.width = (opts.width - opts.label.width) * 0.95;
     return this;
   };
 
