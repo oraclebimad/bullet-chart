@@ -127,6 +127,7 @@
       'width': this.options.width,
       'height': this.options.height
     });
+
     this.group = this.svg.append('g').attr({
       'class': 'bullet-charts-group',
       'transform': 'translate(' + this.options.margin.left + ',' + this.options.chart.margin.top + ')'
@@ -221,7 +222,8 @@
 
   BulletChart.prototype.getAxisPosition = function () {
     var x = this.options.label.width + this.options.margin.left;
-    return 'translate(' + x + ', 1)';
+    var y = this.options.axis.position === 'top' ? this.options.axis.height : 1;
+    return 'translate(' + x + ',' + y + ')';
   };
 
   BulletChart.prototype.getMarkerPosition = function () {
@@ -233,6 +235,7 @@
     var opts = this.options;
     var self = this;
     var axis = d3.svg.axis();
+    axis.orient(opts.axis.position);
     axis.ticks(4).scale(this.scale).tickFormat(opts.axisFormat);
 
     this.svg.attr('height', this.getSVGHeight());
