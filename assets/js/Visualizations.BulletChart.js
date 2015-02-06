@@ -32,9 +32,7 @@
     };
     this.filters = {};
 
-    if (Utils.isArray(data)) {
-      this.setData(data);
-    }
+    this.setData(data);
 
     //hide dom filters
     var filter = container.parentNode.querySelector('.filterinfo');
@@ -46,6 +44,8 @@
     axis: {
       height: 20
     },
+    axisOnChart: false,
+    labelPosition: 'right',
     axisPosition: 'top',
     width: 400,
     height: 300,
@@ -84,8 +84,16 @@
 
   BulletChart.prototype.calculateLayout = function () {
     var opts = this.options;
-    opts.label.width = opts.width * LABEL_WIDTH;
-    opts.label.width = opts.label.width > MAX_LABEL_WIDTH ? MAX_LABEL_WIDTH : opts.label.width;
+
+    if (opts.labelPosition === 'right' || opts.labelPosition === 'left') {
+      opts.label.width = opts.width * LABEL_WIDTH;
+      opts.label.width = opts.label.width > MAX_LABEL_WIDTH ? MAX_LABEL_WIDTH : opts.label.width;
+      opts.chart.width = (opts.width - opts.label.width) * 0.95;
+    } else {
+      opts.label.width = opts.width;
+      opts.chart.width = opts.width * 0.95;
+    }
+
     opts.chart.inner = {
       height: opts.chart.height  * INNER_HEIGHT
     };
@@ -96,17 +104,13 @@
     };
 
     opts.chart.inner.padding = (opts.chart.height - opts.chart.inner.height) / 2;
-    opts.chart.width = (opts.width - opts.label.width) * 0.95;
     return this;
   };
 
-  BulletChart.prototype.createDOM = function () {
+  BulletChart.prototype.createAxisWrapper = function () {
     var axisWrapper;
-    this.svg = this.container.append('div').attr({
-      'class': 'chart-wrapper'
-    }).style({
-      'height': (this.options.height - this.options.axis.height) + 'px'
-    }).append('svg');
+    if (this.options.axisOnChart)
+      return this;
 
     if (this.options.axisPosition === 'top')
       axisWrapper = this.container.insert('svg', 'div.chart-wrapper');
@@ -118,7 +122,18 @@
       'height': this.options.axis.height,
       'width': this.options.width
     });
+    this.axis = axisWrapper.append('g').attr('class', 'axis');
+    return this;
+  };
 
+  BulletChart.prototype.createDOM = function () {
+    var chartHeight = this.options.height;
+    chartHeight -= this.options.axisOnChart ? 0 : this.options.axis.height;
+    this.svg = this.container.append('div').attr({
+      'class': 'chart-wrapper'
+    }).style({
+      'max-height': chartHeight + 'px'
+    }).append('svg');
 
     this.svg.attr({
       'class': 'bullet-charts-container',
@@ -126,12 +141,13 @@
       'height': this.options.height
     });
 
+    this.createAxisWrapper();
+
     this.group = this.svg.append('g').attr({
       'class': 'bullet-charts-group',
       'transform': 'translate(' + this.options.margin.left + ',' + this.options.chart.margin.top + ')'
     });
     this.bullets = this.group.selectAll('g.bullet-charts');
-    this.axis = axisWrapper.append('g').attr('class', 'axis');
     this.marker = this.group.append('g').attr('class', 'marker');
     return this;
   };
@@ -178,6 +194,9 @@
   };
 
   BulletChart.prototype.setData = function (data) {
+    if (Utils.isObject(data))
+      data = [data];
+
     this.data = data;
 
     var scale = this.scale;
@@ -221,38 +240,67 @@
       node.__thresholds__ = bulletThreshold;
       node.__y__ = ((opts.chart.height  + opts.chart.margin.top) * index);
     });
-    console.log(this.data, scale.domain(), scale.range());
+
+    this.axisHelper = d3.svg.axis();
+    this.axisHelper.orient(opts.axisPosition);
+    this.axisHelper.ticks(4).scale(scale).tickFormat(opts.axisFormat);
+
     return this;
   };
 
   BulletChart.prototype.getSVGHeight = function () {
     var opts = this.options;
-    var svgHeight = ((opts.chart.margin.top + opts.chart.height) * this.data.length);
-    return svgHeight;
+    var bulletHeight = (opts.chart.margin.top + opts.chart.height);
+    bulletHeight *= opts.labelPosition === 'top' ? 2 : 1;
+    bulletHeight += opts.axisOnChart ? opts.axis.height : 0;
+    return bulletHeight * this.data.length;
   };
 
   BulletChart.prototype.getAxisPosition = function () {
-    var x = this.options.label.width + this.options.margin.left;
-    var y = this.options.axisPosition === 'top' ? this.options.axis.height : 1;
+    var labelPosition = this.options.labelPosition;
+    var axisPosition = this.options.axisPosition;
+    var x = this.options.margin.left;
+    var y = axisPosition === 'top' ? this.options.axis.height : 1;
+    x += labelPosition === 'right' ? this.options.label.width : 0;
     return 'translate(' + x + ',' + y + ')';
   };
 
   BulletChart.prototype.getMarkerPosition = function () {
-    return 'translate(' + (this.options.label.width) + ', 0)';
+    var labelPosition = this.options.labelPosition;
+    var x = labelPosition === 'top' ? 0 : this.options.label.width;
+    return 'translate(' + x + ', 0)';
+  };
+
+  BulletChart.prototype.createChartAxis = function () {
+    if (this.options.axisOnChart)
+      return this;
+
+    this.axis.attr({
+      'transform': this.getAxisPosition()
+    }).call(this.axisHelper);
+
+    return this;
+  };
+
+  BulletChart.prototype.createBulletAxis = function (bullet) {
+    if (!this.options.axisOnChart)
+      return this;
+    bullet.append('g').attr({
+      'class': 'axis-wrapper',
+      'transform': 'translate(0, ' + (this.options.chart.height * 2) + ')'
+    }).call(this.axisHelper);
+    return this;
   };
 
   BulletChart.prototype.render = function () {
     var renderInner = Utils.proxy(this.renderInnerChart, this);
     var opts = this.options;
     var self = this;
-    var axis = d3.svg.axis();
-    axis.orient(opts.axisPosition);
-    axis.ticks(4).scale(this.scale).tickFormat(opts.axisFormat);
 
     this.svg.attr('height', this.getSVGHeight());
-    this.axis.attr({
-      'transform': this.getAxisPosition()
-    }).call(axis);
+    this.container.select('div.chart-wrapper').style({
+      'height': this.getSVGHeight() + 'px'
+    });
     this.marker.attr({
       'transform': this.getMarkerPosition()
     });
@@ -261,9 +309,11 @@
       'class': 'bullet-chart'
     });
 
+    this.createChartAxis();
+
     this.bullets.attr({
       'transform': function (data, index) {
-        return 'translate(0,' + ((opts.chart.height  + opts.chart.margin.top) * index) + ')';
+        return self.getBulletPosition(index);
       }
     });
     this.bullets.exit().remove();
@@ -282,7 +332,7 @@
     if (!graphic.size()) {
       graphic = bullet.append('g').attr({
         'class': 'graphic',
-        'transform': 'translate(' + opts.label.width + ', 0)'
+        'transform': this.getGraphicPosition()
       });
     }
     var threshold = graphic.selectAll('rect.threshold').data(data.__thresholds__);
@@ -367,6 +417,29 @@
         return d.x;
       }
     });
+    this.createBulletAxis(bullet);
+  };
+
+  BulletChart.prototype.getLabelPosition = function () {
+    var x = 0;
+    var y = 0;
+    return 'translate(' + x + ', ' + y + ')';
+  };
+
+  BulletChart.prototype.getGraphicPosition = function () {
+    var x = 0;
+    var y = 0;
+    if (this.options.labelPosition === 'top')
+      y = this.options.chart.height;
+    if (this.options.labelPosition === 'right')
+      x = this.options.label.width;
+    return 'translate(' + x + ', ' + y + ')';
+  };
+
+  BulletChart.prototype.getBulletPosition = function (index) {
+    var y = (this.options.chart.height + this.options.chart.margin.top);
+    y *= (this.options.labelPosition === 'top') ? 2 : 1;
+    return 'translate(0, ' + (y * index) + ')';
   };
 
   BulletChart.prototype.renderPopup = function () {
