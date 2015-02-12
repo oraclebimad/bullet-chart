@@ -2,7 +2,8 @@
   id: '03efcb62a28c.BulletChart',
   component: {
     'name': 'Bullet Chart',
-    'tooltip': 'Insert Bullet Chart'
+    'tooltip': 'Insert Bullet Chart',
+    'cssClass': 'bullet-chart-plugin'
   },
   properties: [
     {key: "width", label: "Width", type: "length", value: "320px"},

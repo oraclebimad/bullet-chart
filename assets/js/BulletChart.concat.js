@@ -757,6 +757,10 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
     var padding = this.options.labelPosition === 'top' ? 0 : (this.options.label.width + this.options.margin.left);
     var colors =  this.colors;
+    var lineWidth = 4;
+    var lineHeight = 18;
+    var labelWidth = ((this.options.width - padding) / 2);
+    labelWidth = labelWidth - (labelWidth * 0.1);
     this.legends = this.container.insert('div', 'div.chart-wrapper');
     this.legends.attr({
       'class': 'bullet-legends'
@@ -772,14 +776,22 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     var target = this.legends.append('div').attr('class', 'target');
 
     current.append('div').attr('class', 'legend').style({
-      'background-color': colors('current')
+      'background-color': colors('current'),
+      'width': lineHeight + 'px',
+      'height': lineWidth + 'px'
     });
-    current.append('div').attr('class', 'label').text(Utils.capitalize(this.options.currentLabel));
+    current.append('div').attr('class', 'label').style({
+      width: (labelWidth - lineHeight) + 'px'
+    }).append('span').attr('class', 'croptext').text(Utils.capitalize(this.options.currentLabel));
 
     target.append('div').attr('class', 'legend').style({
-      'background-color': colors('current')
+      'background-color': colors('current'),
+      'height': lineHeight + 'px',
+      'width': lineWidth + 'px'
     });
-    target.append('div').attr('class', 'label').text(Utils.capitalize(this.options.targetLabel));
+    target.append('div').attr('class', 'label').style({
+      width: (labelWidth - lineWidth) + 'px'
+    }).append('span').attr('class', 'croptext').text(Utils.capitalize(this.options.targetLabel));
     this.options.legend.height = this.legends.node().clientHeight;
 
     return this;
