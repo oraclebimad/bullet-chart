@@ -11,6 +11,51 @@
   font-size: 14px;
 }
 
+.bullet-legends {
+  overflow: hidden;
+  .current, .target {
+    width: 49%;
+    margin-right: 1%;
+    display: block;
+    height: 100%;
+    float:left;
+    &:before {
+      content: '';
+      display: inline-block;
+      height: 100%;
+      vertical-align: middle;
+      margin-right: -0.25em;
+    }
+  }
+
+  .legend, .label {
+    display: inline-block;
+  }
+
+  .legend {
+    vertical-align: middle;
+    opacity: 0.7;
+  }
+
+  .label {
+    vertical-align: middle;
+    margin-left: 5px;
+    color: #A6A9A8;
+    text-shadow: none;
+    text-transform: capitalize;
+    font-weight: 100;
+  }
+
+  .current .legend {
+    width: 20px;
+    height: 4px;
+  }
+
+  .target .legend {
+    height: 18px;
+    width: 4px;
+  }
+}
 
 /**
  *

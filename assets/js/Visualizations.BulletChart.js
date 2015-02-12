@@ -57,6 +57,12 @@
       margin: {top: 10}
     },
     label: {},
+    legend: {
+      height: 0,
+      paddingTop: 10,
+      paddingBottom: 10
+    },
+    renderLegends: true,
     //values represented in percentages
     thresholds: {
       lowest: 33,
@@ -131,8 +137,6 @@
     chartHeight -= this.options.axisOnChart ? 0 : this.options.axis.height;
     this.svg = this.container.append('div').attr({
       'class': 'chart-wrapper'
-    }).style({
-      'max-height': chartHeight + 'px'
     }).append('svg');
 
     this.svg.attr({
@@ -141,7 +145,11 @@
       'height': this.options.height
     });
 
-    this.createAxisWrapper();
+    this.renderLegends().createAxisWrapper();
+    chartHeight -= this.options.legend.height;
+    this.container.select('div.chart-wrapper').style({
+      'max-height': chartHeight + 'px'
+    });
 
     this.group = this.svg.append('g').attr({
       'class': 'bullet-charts-group',
@@ -158,12 +166,12 @@
    *
    */
   BulletChart.prototype.init = function () {
+    this.setColors(this.options.colors);
     this.calculateLayout().createDOM();
     var svg = this.svg.node();
     var self = this;
 
     this.scale = d3.scale.linear().range([0, this.options.chart.width]);
-    this.setColors(this.options.colors);
     this.renderPopup();
 
 
@@ -424,6 +432,40 @@
     var x = 0;
     var y = 0;
     return 'translate(' + x + ', ' + y + ')';
+  };
+
+  BulletChart.prototype.renderLegends = function () {
+    if (!this.options.renderLegends)
+      return this;
+
+    var padding = this.options.labelPosition === 'top' ? 0 : (this.options.label.width + this.options.margin.left);
+    var colors =  this.colors;
+    this.legends = this.container.insert('div', 'div.chart-wrapper');
+    this.legends.attr({
+      'class': 'bullet-legends'
+    }).style({
+      'width': this.options.chart.width + 'px',
+      'padding-left': padding + 'px',
+      'padding-top': this.options.legend.paddingTop + 'px',
+      'padding-bottom': this.options.legend.paddingBottom + 'px'
+    });
+
+
+    var current = this.legends.append('div').attr('class', 'current');
+    var target = this.legends.append('div').attr('class', 'target');
+
+    current.append('div').attr('class', 'legend').style({
+      'background-color': colors('current')
+    });
+    current.append('div').attr('class', 'label').text(Utils.capitalize(this.options.currentLabel));
+
+    target.append('div').attr('class', 'legend').style({
+      'background-color': colors('current')
+    });
+    target.append('div').attr('class', 'label').text(Utils.capitalize(this.options.targetLabel));
+    this.options.legend.height = this.legends.node().clientHeight;
+
+    return this;
   };
 
   BulletChart.prototype.getGraphicPosition = function () {
