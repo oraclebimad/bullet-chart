@@ -26,7 +26,7 @@
     {key: "middlecolor", label: "Middle Color", type: "color", value: "#F5D328"},
     {key: "highercolor", label: "Higher Color", type: "color", value: "#70BF41"},
     {key: "currentcolor", label: "Current Bar Color", type: "color", value: "#53585F"},
-    {key: "targetcolor", label: "Target Color", type: "color", value: "#FFF"}
+    {key: "targetcolor", label: "Target Color", type: "color", value: "#53585F"}
   ],
   remoteFiles: [
     {
