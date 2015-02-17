@@ -6,13 +6,13 @@
     'cssClass': 'bullet-chart-plugin'
   },
   properties: [
-    {key: "width", label: "Width", type: "length", value: "320px"},
+    {key: "width", label: "Width", type: "length", value: "1024px"},
     {key: "height", label: "Height", type: "length", value: "300px"},
     {key: "axis", label: "Axis Position", type: "lov", options: [
       {label: "Top", value: "top"},
       {label: "Bottom", value: "bottom"},
     ], value: "top"},
-    {key: "numberformat", label: "Numeric Format", type: "lov", options: [
+    {key: "numberformat", label: "Number Format", type: "lov", options: [
       {label: 'Raw', value: 'raw'},
       {label: 'Currency', value: 'currency'},
       {label: 'Thousands separated', value: 'thousands'}
