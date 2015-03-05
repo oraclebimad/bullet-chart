@@ -6,8 +6,10 @@
     'cssClass': 'bullet-chart-plugin'
   },
   properties: [
-    {key: "width", label: "Width", type: "length", value: "1024px"},
+    {key: "width", label: "Width", type: "length", value: "250px"},
     {key: "height", label: "Height", type: "length", value: "300px"},
+    {key: "labelwidth", label: "Label Width", type: "length", value: "0.39"},
+    {key: "labelfont", label: "Label Font Size", type: "fontsize", value: "14px"},
     {key: "axis", label: "Axis Position", type: "lov", options: [
       {label: "Top", value: "top"},
       {label: "Bottom", value: "bottom"},
@@ -81,9 +83,11 @@
         target: props.targetcolor
       },
       axisPosition: props.axis,
+      labelFontSize: parseInt(props.labelfont, 10),
       opacity: props.opacity,
       currentLabel: this.dataModel.indexedMetaData.current.label,
-      targetLabel: this.dataModel.indexedMetaData.baseline.label
+      targetLabel: this.dataModel.indexedMetaData.baseline.label,
+      labelWidth: props.labelwidth
     });
     this.visualization.render();
     this.visualization.addEventListener('filter', function (filters) {
