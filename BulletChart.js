@@ -6,7 +6,7 @@
     'cssClass': 'bullet-chart-plugin'
   },
   properties: [
-    {key: "width", label: "Width", type: "length", value: "250px"},
+    {key: "width", label: "Width", type: "length", value: "1024px"},
     {key: "height", label: "Height", type: "length", value: "300px"},
     {key: "labelwidth", label: "Label Width", type: "length", value: "0.39"},
     {key: "labelfont", label: "Label Font Size", type: "fontsize", value: "14px"},
