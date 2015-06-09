@@ -52,18 +52,28 @@
   dataType: 'arrayOfArrays',
   render: function (context, container, data, fields, props) {
     var self = this;
+    var indexedFields;
     container.innerHTML = '';
 
     this.dataModel = new Utils.DataModel(data, fields);
     this.dataModel.setColumnOrder([
      'group'
      ]).sortBy('baseline').desc().indexColumns();
+    indexedFields = this.dataModel.indexedMetaData;
 
     props.numberprefix = typeof props.numberprefix !== 'boolean' ? props.numberprefix === 'true' : props.numberprefix;
     this.visualization = new Visualizations.BulletChart(container, this.dataModel.nest().values, {
       width: parseInt(props.width, 10),
       height: parseInt(props.height, 10),
       numberFormat: Utils.format(props.numberformat, {
+        symbol: props.currencysymbol
+      }),
+      baseLineFormat: this.formatter(indexedFields.baseline, {
+        numberformat: props.numberformat,
+        symbol: props.currencysymbol
+      }),
+      currentFormat: this.formatter(indexedFields.current, {
+        numberformat: props.numberformat,
         symbol: props.currencysymbol
       }),
       axisFormat: Utils.format(props.numberformat, {
@@ -103,8 +113,6 @@
         } catch (e) {}
       });
     });
-
-
   },
   refresh: function (context, container, data, fields, props) {
     if (!this.avoidRefresh) {
@@ -114,6 +122,12 @@
     }
     this.avoidRefresh = false;
 
+  },
+  formatter: function (fieldMetaData, opts) {
+    if (xdo.api.format && fieldMetaData.formatMask && fieldMetaData.dataType === 'numeric')
+      return xdo.api.format(fieldMetaData.dataType, fieldMetaData.formatMask, fieldMetaData.formatStyle);
+
+    return Utils.format(opts.numberformat, opts);
   },
   constructFilters: function (data, context) {
     var group = this.dataModel.indexedMetaData.group.field;
