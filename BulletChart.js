@@ -8,18 +8,11 @@
   properties: [
     {key: "width", label: "Width", type: "length", value: "1024px"},
     {key: "height", label: "Height", type: "length", value: "300px"},
-    {key: "labelwidth", label: "Label Width", type: "length", value: "0.39"},
     {key: "labelfont", label: "Label Font Size", type: "fontsize", value: "14px"},
     {key: "axis", label: "Axis Position", type: "lov", options: [
       {label: "Top", value: "top"},
       {label: "Bottom", value: "bottom"},
     ], value: "top"},
-    {key: "numberformat", label: "Number Format", type: "lov", options: [
-      {label: 'Raw', value: 'raw'},
-      {label: 'Currency', value: 'currency'},
-      {label: 'Thousands separated', value: 'thousands'}
-    ], value: 'thousands'},
-    {key: "currencysymbol", label: "Currency Symbol", type: "string", value: ""},
     {key: "opacity", label: "Threshold opacity", type: "number", value: ".75"},
     {key: "lowest", label: "Lower Level %", type: "number", value: "33"},
     {key: "middle", label: "Middle Level %", type: "number", value: "66"},
@@ -58,28 +51,20 @@
     this.dataModel = new Utils.DataModel(data, fields);
     this.dataModel.setColumnOrder([
      'group'
-     ]).sortBy('baseline').desc().indexColumns();
+    ]).sortBy('baseline').desc().indexColumns();
     indexedFields = this.dataModel.indexedMetaData;
 
     props.numberprefix = typeof props.numberprefix !== 'boolean' ? props.numberprefix === 'true' : props.numberprefix;
+
+    var baseLineFormat = this.formatter(indexedFields.baseline);
+    var currentFormat = this.formatter(indexedFields.current);
     this.visualization = new Visualizations.BulletChart(container, this.dataModel.nest().values, {
       width: parseInt(props.width, 10),
       height: parseInt(props.height, 10),
-      numberFormat: Utils.format(props.numberformat, {
-        symbol: props.currencysymbol
-      }),
-      baseLineFormat: this.formatter(indexedFields.baseline, {
-        numberformat: props.numberformat,
-        symbol: props.currencysymbol
-      }),
-      currentFormat: this.formatter(indexedFields.current, {
-        numberformat: props.numberformat,
-        symbol: props.currencysymbol
-      }),
-      axisFormat: Utils.format(props.numberformat, {
-        symbol: props.currencysymbol,
-        si: true
-      }),
+      numberFormat: currentFormat,
+      baseLineFormat: baseLineFormat,
+      currentFormat: currentFormat,
+      axisFormat: currentFormat,
       thresholds: {
         lowest: +props.lowest,
         middle: +props.middle,
@@ -96,8 +81,7 @@
       labelFontSize: parseInt(props.labelfont, 10),
       opacity: props.opacity,
       currentLabel: this.dataModel.indexedMetaData.current.label,
-      targetLabel: this.dataModel.indexedMetaData.baseline.label,
-      labelWidth: props.labelwidth
+      targetLabel: this.dataModel.indexedMetaData.baseline.label
     });
     this.visualization.render();
     this.visualization.addEventListener('filter', function (filters) {
@@ -124,10 +108,10 @@
 
   },
   formatter: function (fieldMetaData, opts) {
-    if (xdo.api.format && fieldMetaData.formatMask && fieldMetaData.dataType === 'numeric')
+    if (xdo.api.format && fieldMetaData.dataType === 'number')
       return xdo.api.format(fieldMetaData.dataType, fieldMetaData.formatMask, fieldMetaData.formatStyle);
 
-    return Utils.format(opts.numberformat, opts);
+    return Utils.format('thousands', opts);
   },
   constructFilters: function (data, context) {
     var group = this.dataModel.indexedMetaData.group.field;
