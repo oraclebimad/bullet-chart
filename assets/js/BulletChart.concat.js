@@ -1054,6 +1054,8 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
   };
 
   BulletChart.prototype.showPopup = function (data, position) {
+    if (Utils.isDesigner())
+      return this;
     this.popup.close();
     this.popup.find('.target.value').html(this.options.baseLineFormat(data.baseline));
     this.popup.find('.current.value').html(this.options.currentFormat(data.current));
@@ -1063,6 +1065,8 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
   };
 
   BulletChart.prototype.hidePopup = function () {
+    if (Utils.isDesigner())
+      return this;
     this.popup.close();
     return this;
   };
