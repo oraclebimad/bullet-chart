@@ -64,7 +64,7 @@
       numberFormat: currentFormat,
       baseLineFormat: baseLineFormat,
       currentFormat: currentFormat,
-      axisFormat: currentFormat,
+      axisFormat: Utils.format('axis', currentFormat),
       thresholds: {
         lowest: +props.lowest,
         middle: +props.middle,

@@ -31,6 +31,20 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
         format += 's';
       format += 'f';
       return d3.format(format);
+    },
+    axis: function (formatter) {
+      if (!formatter || typeof formatter !== 'function')
+        formatter = String;
+
+      var suffixFormatter = d3.format('s');
+      return function (value) {
+        //Remove all non integer values
+        value = parseInt(value, 10);
+        var formatted = suffixFormatter(value);
+        var suffix = formatted.replace(/\d+/, '');
+        value = formatted.replace(/[^\d]+/, '');
+        return formatter(value) + suffix;
+      };
     }
   };
   var Utils = {
@@ -452,6 +466,11 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     opts = Utils.isObject(opts) ? opts : {};
     this.options = Utils.extend({}, BulletChart.DEFAULTS, opts);
     this.animations = false;
+    //dummy methods for popup
+    this.popup = {
+      close: function () {},
+      open: function () {}
+    };
     this.init();
     this.events = {
       'filter': [],
@@ -469,6 +488,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
       this.options.baseLineFormat = this.options.numberFormat;
     if (!this.options.currentFormat)
       this.options.currentFormat = this.options.numberFormat;
+
   };
 
   BulletChart.DEFAULTS = {
@@ -614,11 +634,14 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     });
 
     document.body.addEventListener('click', function (event) {
+      if (Utils.isDesigner())
+        return this;
       var target = $(event.target || event.srcElement);
       if (!target.is('g.bullet-chart') && !target.parents('g.bullet-chart').length && !target.is('.ui-popup-container') && !target.parents('.ui-popup-container').length) {
         self.popup.close();
         self.svg.selectAll('.bullet-chart').classed('has-popup', false);
       }
+      return this;
     });
 
     return this;
