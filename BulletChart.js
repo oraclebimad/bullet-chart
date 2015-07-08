@@ -1,9 +1,10 @@
 {
-  id: '03efcb62a28c.BulletChart',
+  id: 'com.oracle.bimad.BulletChart',
   component: {
     'name': 'Bullet Chart',
-    'tooltip': 'Insert Bullet Chart',
-    'cssClass': 'bullet-chart-plugin'
+    'tooltip': 'Designed by Stephen Few, a bullet chart “provides a rich display of data in a small space.” A variation on a bar chart, bullet charts compare a given quantitative measure (such as profit or revenue) against qualitative ranges (e.g., poor, satisfactory, good) and related markers (e.g., the same measure a year ago).',
+    'cssClass': 'bullet-chart-plugin',
+    'icon': 'asset://official-plugin.png'
   },
   properties: [
     {key: "width", label: "Width", type: "length", value: "1024px"},
@@ -37,7 +38,7 @@
     }
   ],
   fields: [
-    {name: "group", caption: "Drop Group", fieldType: "label", dataType: "string"},
+    {name: "group", caption: "Drop Group", fieldType: "label", dataType: "string", optional: true},
     {name: "current", caption: "Drop Current Value", fieldType: "measure", dataType: "number", formula: "summation"},
     {name: "baseline", caption: "Drop Baseline", fieldType: "measure", dataType: "number", formula: "summation"}
   ],
@@ -45,7 +46,14 @@
   dataType: 'arrayOfArrays',
   render: function (context, container, data, fields, props) {
     var self = this;
+    var isGrouped = !(typeof data[0][0] === 'string' && data[0][0].length);
     var indexedFields;
+    var nested;
+    var baseLineFormat;
+    var currentFormat;
+    var showLabel = !isGrouped;
+    var renderLegends = !isGrouped;
+    var axisOnChart = isGrouped;
     container.innerHTML = '';
 
     this.dataModel = new Utils.DataModel(data, fields);
@@ -53,12 +61,15 @@
      'group'
     ]).sortBy('baseline').desc().indexColumns();
     indexedFields = this.dataModel.indexedMetaData;
+    nested = this.dataModel.nest().values;
 
-    props.numberprefix = typeof props.numberprefix !== 'boolean' ? props.numberprefix === 'true' : props.numberprefix;
+    if (isGrouped)
+      nested.key = Utils.capitalize(this.dataModel.indexedMetaData.current.label);
 
-    var baseLineFormat = this.formatter(indexedFields.baseline);
-    var currentFormat = this.formatter(indexedFields.current);
-    this.visualization = new Visualizations.BulletChart(container, this.dataModel.nest().values, {
+    baseLineFormat = this.formatter(indexedFields.baseline);
+    currentFormat = this.formatter(indexedFields.current);
+
+    this.visualization = new Visualizations.BulletChart(container, nested, {
       width: parseInt(props.width, 10),
       height: parseInt(props.height, 10),
       numberFormat: currentFormat,
@@ -77,11 +88,15 @@
         current: props.currentcolor,
         target: props.targetcolor
       },
-      axisPosition: props.axis,
+      axisPosition: isGrouped ? 'bottom': props.axis,
       labelFontSize: parseInt(props.labelfont, 10),
       opacity: props.opacity,
       currentLabel: this.dataModel.indexedMetaData.current.label,
-      targetLabel: this.dataModel.indexedMetaData.baseline.label
+      targetLabel: this.dataModel.indexedMetaData.baseline.label,
+      showLabel: showLabel,
+      renderLegends: renderLegends,
+      axisOnChart: axisOnChart,
+      labelPosition: isGrouped ? 'top' : 'left'
     });
     this.visualization.render();
     this.visualization.addEventListener('filter', function (filters) {
