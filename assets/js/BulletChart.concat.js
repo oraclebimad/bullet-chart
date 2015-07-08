@@ -497,7 +497,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     },
     showLabel: true,
     axisOnChart: false,
-    labelPosition: 'right',
+    labelPosition: 'left',
     axisPosition: 'top',
     width: 400,
     height: 300,
@@ -727,7 +727,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     var axisPosition = this.options.axisPosition;
     var x = this.options.margin.left;
     var y = axisPosition === 'top' ? this.options.axis.height : 1;
-    x += labelPosition === 'right' ? this.options.label.width : 0;
+    x += labelPosition === 'left' ? this.options.label.width : 0;
     return 'translate(' + x + ',' + y + ')';
   };
 
@@ -972,7 +972,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     var y = 0;
     if (this.options.labelPosition === 'top' && this.options.showLabel)
       y = this.options.chart.height;
-    if (this.options.labelPosition === 'right')
+    if (this.options.labelPosition === 'left')
       x = this.options.label.width;
     return 'translate(' + x + ', ' + y + ')';
   };
