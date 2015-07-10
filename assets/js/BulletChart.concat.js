@@ -550,7 +550,11 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
     } else {
       opts.label.width = opts.width;
       opts.chart.width = opts.width * 0.95;
+      opts.margin.left = 20;
     }
+
+    if (!opts.renderLegends)
+      opts.chart.margin.top = 10;
 
     opts.chart.inner = {
       height: opts.chart.height  * INNER_HEIGHT
@@ -781,7 +785,7 @@ return i?u+i*(n[r]-u):u},Bo.median=function(t,e){return arguments.length>1&&(t=t
 
     if (this.data.length) {
       this.group.attr({
-        'transform': 'translate(' + this.options.margin.left + ', 0)'
+        'transform': 'translate(' + this.options.margin.left + ',' + this.options.chart.margin.top + ')'
       });
     }
 
