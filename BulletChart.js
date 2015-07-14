@@ -27,6 +27,13 @@
   remoteFiles: [
     {
       type:'js',
+      location: '//cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js',
+      isLoaded: function() {
+        return ('d3' in window);
+      }
+    },
+    {
+      type:'js',
       location: 'asset://js/BulletChart.concat.js',
       isLoaded: function() {
         return 'Visualizations' in window && 'BulletChart' in Visualizations;
@@ -56,7 +63,7 @@
     var axisOnChart = isGrouped;
     container.innerHTML = '';
 
-    this.dataModel = new Utils.DataModel(data, fields);
+    this.dataModel = new bimad.utils.DataModel(data, fields);
     this.dataModel.setColumnOrder([
      'group'
     ]).sortBy('baseline').desc().indexColumns();
@@ -64,7 +71,7 @@
     nested = this.dataModel.nest().values;
 
     if (isGrouped)
-      nested.key = Utils.capitalize(this.dataModel.indexedMetaData.current.label);
+      nested.key = bimad.utils.capitalize(this.dataModel.indexedMetaData.current.label);
 
     baseLineFormat = this.formatter(indexedFields.baseline);
     currentFormat = this.formatter(indexedFields.current);
@@ -75,7 +82,7 @@
       numberFormat: currentFormat,
       baseLineFormat: baseLineFormat,
       currentFormat: currentFormat,
-      axisFormat: Utils.format('axis', currentFormat),
+      axisFormat: bimad.utils.format('axis', currentFormat),
       thresholds: {
         lowest: +props.lowest,
         middle: +props.middle,
@@ -126,7 +133,7 @@
     if (xdo.api.format && fieldMetaData.dataType === 'number')
       return xdo.api.format(fieldMetaData.dataType, fieldMetaData.formatMask, fieldMetaData.formatStyle);
 
-    return Utils.format('thousands', opts);
+    return bimad.utils.format('thousands', opts);
   },
   constructFilters: function (data, context) {
     var group = this.dataModel.indexedMetaData.group.field;

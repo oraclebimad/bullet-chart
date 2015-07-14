@@ -94,9 +94,8 @@ module.exports = function (grunt) {
       },
       dist: {
         src: [
-          'assets/js/externals/d3/d3.min.js',
-          'assets/js/Utils/Utils.js',
-          'assets/js/Utils/Utils.DataModel.js',
+          'assets/js/Utils/bimad.utils.js',
+          'assets/js/Utils/bimad.utils.DataModel.js',
           'assets/core/js/Visualizations.BulletChart.js'
         ],
         dest: 'assets/js/BulletChart.concat.js'
