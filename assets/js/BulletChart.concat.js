@@ -633,22 +633,24 @@
     this.renderPopup();
 
 
-    jQuery(svg).on('tap.bullet-chart', '.graphic', function (event) {
-      self.togglePopup(d3.select(this.parentNode), event);
-    }).on('tap.bullet-chart', '.label-container', function () {
-      self.toggleSelect(d3.select(this.parentNode));
-    });
+    if (!bimad.utils.isDesigner()) {
+      jQuery(svg).on('tap.bullet-chart', '.graphic', function (event) {
+        self.togglePopup(d3.select(this.parentNode), event);
+      }).on('tap.bullet-chart', '.label-container', function () {
+        self.toggleSelect(d3.select(this.parentNode));
+      });
 
-    document.body.addEventListener('click', function (event) {
-      if (bimad.utils.isDesigner())
+      document.body.addEventListener('click', function (event) {
+        if (bimad.utils.isDesigner())
+          return this;
+        var target = $(event.target || event.srcElement);
+        if (!target.is('g.bullet-chart') && !target.parents('g.bullet-chart').length && !target.is('.ui-popup-container') && !target.parents('.ui-popup-container').length) {
+          self.popup.close();
+          self.svg.selectAll('.bullet-chart').classed('has-popup', false);
+        }
         return this;
-      var target = $(event.target || event.srcElement);
-      if (!target.is('g.bullet-chart') && !target.parents('g.bullet-chart').length && !target.is('.ui-popup-container') && !target.parents('.ui-popup-container').length) {
-        self.popup.close();
-        self.svg.selectAll('.bullet-chart').classed('has-popup', false);
-      }
-      return this;
-    });
+      });
+    }
 
     return this;
   };
